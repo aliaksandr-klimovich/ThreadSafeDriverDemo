@@ -107,6 +107,7 @@ namespace ThreadSafeDriverDemo
         }
     }
 
+    [Parallelizable]
     [TestFixture("Chrome")]
     [TestFixture("Firefox")]
     public class DriverDemoTests
@@ -125,29 +126,29 @@ namespace ThreadSafeDriverDemo
             driver = Driver.Instance.GetWebDriver(driverName);
         }
 
-        [Test]
         [Parallelizable]
+        [Test]
         public void Test1()
         {
             driver.Url = "http://www.tut.by";
         }
 
-        [Test]
         [Parallelizable]
+        [Test]
         public void Test2()
         {
             driver.Url = "http://www.onliner.by";
         }
 
-        [Test]
         [Parallelizable]
+        [Test]
         public void Test3()
         {
             driver.Url = "http://www.dev.by";
         }
 
-        [Test]
         [Parallelizable]
+        [Test]
         public void Test4()
         {
             driver.Url = "http://www.vk.com";
