@@ -58,7 +58,7 @@ namespace ThreadSafeDriverDemo
                 {  // Have possibility to create new instance of web driver.
                     if (webDrivers.TryGetValue(currentThreadId, out currentWebDriver) == false)
                     {
-                        switch (driverName) 
+                        switch (driverName)
                         {
                             case "Chrome":
                                 currentWebDriver = new ChromeDriver();
@@ -112,9 +112,9 @@ namespace ThreadSafeDriverDemo
     public class DriverDemoTests
     {
         private IWebDriver driver;
-        private string driverName = "Chrome";
+        private string driverName;
 
-        public DriverDemoTests (string driverName) 
+        public DriverDemoTests(string driverName)
         {
             this.driverName = driverName;
         }
