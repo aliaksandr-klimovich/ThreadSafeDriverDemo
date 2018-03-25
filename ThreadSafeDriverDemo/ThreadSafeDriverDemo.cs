@@ -3,13 +3,14 @@ using System.Threading;
 using System.Collections.Generic;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Firefox;
 using NUnit.Framework;
 
 namespace ThreadSafeDriverDemo
 {
     public sealed class Driver
     {
-        private static int MAX_WEB_DRIVERS = 2;  // Max web drivers to run in parallel.
+        private static int MAX_WEB_DRIVERS = 3;  // Max web drivers to run in parallel.
         private static int WAIT_FREE_WEB_DRIVER_COUNT = 1000;  // Each thread will sleep this time for creating a new instance of web driver.
         private readonly Dictionary<int, IWebDriver> webDrivers = new Dictionary<int, IWebDriver>();  // Key = thread ID. Value = web driver instance.
 
@@ -40,7 +41,7 @@ namespace ThreadSafeDriverDemo
         /*
          * Return a new web driver for current thread or an existing one if it was previously created.
          */
-        public IWebDriver GetWebDriver()
+        public IWebDriver GetWebDriver(string driverName = "Chrome")
         {
             IWebDriver currentWebDriver;
             int currentThreadId = Thread.CurrentThread.GetHashCode();
@@ -57,7 +58,17 @@ namespace ThreadSafeDriverDemo
                 {  // Have possibility to create new instance of web driver.
                     if (webDrivers.TryGetValue(currentThreadId, out currentWebDriver) == false)
                     {
-                        currentWebDriver = new ChromeDriver();  // TODO: Take web driver from another place, e.g. config.
+                        switch (driverName) 
+                        {
+                            case "Chrome":
+                                currentWebDriver = new ChromeDriver();
+                                break;
+                            case "Firefox":
+                                currentWebDriver = new FirefoxDriver();
+                                break;
+                            default:
+                                throw new Exception($"Unknown browser! Got: {driverName}.");
+                        }
                         webDrivers[currentThreadId] = currentWebDriver;
                     }  // Else the web driver exists and will be returned.
                     syncWebDriver.ReleaseMutex();
@@ -96,14 +107,22 @@ namespace ThreadSafeDriverDemo
         }
     }
 
-    class DriverDemoTests
+    [TestFixture("Chrome")]
+    [TestFixture("Firefox")]
+    public class DriverDemoTests
     {
-        IWebDriver driver;
+        private IWebDriver driver;
+        private string driverName = "Chrome";
+
+        public DriverDemoTests (string driverName) 
+        {
+            this.driverName = driverName;
+        }
 
         [SetUp]
         public void Initialize()
         {
-            driver = Driver.Instance.GetWebDriver();
+            driver = Driver.Instance.GetWebDriver(driverName);
         }
 
         [Test]
