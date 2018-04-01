@@ -1,25 +1,15 @@
-﻿using OpenQA.Selenium;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
 namespace WebAutomationFramework
 {
     [Parallelizable]
     [TestFixture("Chrome")]
     [TestFixture("Firefox")]
-    public class DriverDemoTests
+    public class DriverDemoTests : BaseTest
     {
-        private IWebDriver driver;
-        private string driverName;
-
         public DriverDemoTests(string driverName)
         {
             this.driverName = driverName;
-        }
-
-        [SetUp]
-        public void Initialize()
-        {
-            driver = Driver.Instance.GetWebDriver(driverName);
         }
 
         [Parallelizable]
@@ -48,12 +38,6 @@ namespace WebAutomationFramework
         public void Test4()
         {
             driver.Url = "http://www.vk.com";
-        }
-
-        [TearDown]
-        public void Cleanup()
-        {
-            Driver.Instance.StopWebDriver();
         }
     }
 }
