@@ -9,11 +9,10 @@ namespace WebAutomationFramework
 {
     public sealed class Driver
     {
-        private static readonly int MAX_WEB_DRIVERS = 2;  // Max web drivers to run in parallel.
+        private static readonly int MAX_WEB_DRIVERS = 2;  // Max web drivers to run in parallel. NUnit uses 1 thread per core.
         private static readonly int GET_WEB_DRIVER_POLL_TIME = 1000;
-        private static readonly int MAX_GET_WEB_DRIVER_RETRIES = 15;
         private static readonly Dictionary<int, IWebDriver> webDrivers = new Dictionary<int, IWebDriver>();  // Key = thread ID. Value = web driver instance.
-        private static readonly object ThreadLock = new object();  // To sync `Driver` class.
+        private static readonly Object ThreadLock = new Object();  // To sync `Driver` class.
 
         // Make `Driver` as singleton.
         private static volatile Driver instance;
@@ -42,19 +41,18 @@ namespace WebAutomationFramework
         public IWebDriver GetWebDriver(string driverName = "Chrome")
         {
             IWebDriver currentWebDriver = null;
-            int currentThreadId = Thread.CurrentThread.ManagedThreadId;
-            int retries = MAX_GET_WEB_DRIVER_RETRIES;
+            int threadId = Thread.CurrentThread.ManagedThreadId;
 
-            while (retries-- != 0)
+            while (true)
             {
                 lock (ThreadLock)
                 {
-                    if (webDrivers.TryGetValue(currentThreadId, out currentWebDriver) == false)
+                    if (webDrivers.TryGetValue(threadId, out currentWebDriver) == false)
                     {
                         if (webDrivers.Count < MAX_WEB_DRIVERS)
                         {
                             currentWebDriver = StartWebDriver(driverName);
-                            webDrivers[currentThreadId] = currentWebDriver;
+                            webDrivers[threadId] = currentWebDriver;
                         }
                     }
                 }
@@ -66,8 +64,6 @@ namespace WebAutomationFramework
 
                 Thread.Sleep(GET_WEB_DRIVER_POLL_TIME);
             }
-
-            throw new System.Exception("getWebDriver() timeout");
         }
 
         private IWebDriver StartWebDriver(string driverName)
@@ -83,18 +79,15 @@ namespace WebAutomationFramework
             }
         }
 
-        /*
-         * Close web driver for current thread.
-         */
         public void StopWebDriver()
         {
-            int currentThreadId = Thread.CurrentThread.ManagedThreadId;
+            int threadId = Thread.CurrentThread.ManagedThreadId;
             lock (ThreadLock)
             {
-                if (webDrivers.TryGetValue(currentThreadId, out IWebDriver currentWebDriver) == true)
+                if (webDrivers.TryGetValue(threadId, out IWebDriver currentWebDriver) == true)
                 {
                     currentWebDriver.Quit();
-                    webDrivers.Remove(currentThreadId);
+                    webDrivers.Remove(threadId);
                 }
             }
         }
